@@ -3,74 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic AI Gatekeeper</title>
+    <title>Quantum Biometric Core v3</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+        .scanner-line { animation: scan 2.5s linear infinite; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex items-center justify-center p-6">
+<body class="bg-slate-950 text-slate-100 font-mono min-h-screen flex items-center justify-center p-4 selection:bg-cyan-500 selection:text-slate-950">
 
-    <div id="terminal-card" class="w-full max-w-5xl bg-slate-900 border-2 border-rose-500 rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[520px] transition-all duration-300">
+    <div id="terminal-card" class="w-full max-w-5xl bg-slate-900/40 backdrop-blur-md border rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[560px] transition-all duration-500">
         
-        <div class="p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800">
-            
-            <div id="view-lock" class="block">
-                <div class="flex items-center gap-2 mb-6">
-                    <span class="h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    <span class="text-xs font-mono tracking-widest text-rose-400 uppercase font-bold">SYSTEM_LOCKED</span>
+        <div class="p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800 bg-gradient-to-b from-slate-900 via-slate-900/90 to-slate-950">
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-2">
+                        <span id="sys-dot" class="h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_10px_currentColor] animate-pulse"></span>
+                        <span id="sys-badge" class="text-[10px] tracking-[0.3em] font-bold uppercase text-purple-400">INITIAL_SETUP</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 border border-slate-800 px-2 py-0.5 rounded">SECURE_CORE_v3</span>
                 </div>
-                <h1 class="text-3xl font-bold tracking-tight text-white mb-2">Verification Required</h1>
-                <p class="text-slate-400 text-sm leading-relaxed mb-8">
-                    Hold up your active biometric hand gesture to authenticate. Matching grants access and launches Instagram.
-                </p>
-            </div>
 
-            <div id="view-dashboard" class="hidden">
-                <div class="flex items-center gap-2 mb-6">
-                    <span class="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
-                    <span class="text-xs font-mono tracking-widest text-cyan-400 uppercase font-bold">AUTHORIZED_SESSION</span>
-                </div>
-                <h1 class="text-3xl font-bold tracking-tight text-white mb-2">Control Terminal</h1>
-                <p class="text-slate-400 text-sm leading-relaxed mb-6">
-                    Instagram opened successfully in a new tab! You can now overwrite your biometric signature lock profiles.
+                <h1 id="main-title" class="text-2xl font-black tracking-tight text-white mb-2 uppercase">Create Passcode</h1>
+                <p id="main-desc" class="text-slate-400 text-xs font-sans leading-relaxed mb-6">
+                    No biometric signature detected in local cache memory. Strike 3 distinct hand gestures sequentially to configure your encryption key.
                 </p>
+
                 <div class="space-y-3">
-                    <button id="btn-change" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 font-semibold text-sm rounded-xl transition-all cursor-pointer shadow-lg shadow-cyan-950 text-white">
-                        ⚙ Change Gestural Password
+                    <div id="sequence-title" class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Registration Stages:</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div id="step-card-0" class="bg-slate-950/80 border p-3 rounded-xl text-center transition-all duration-300">
+                            <div class="text-[9px] text-slate-500 font-bold mb-1">STAGE_01</div>
+                            <div id="step-text-0" class="text-xs font-bold truncate">EMPTY</div>
+                        </div>
+                        <div id="step-card-1" class="bg-slate-950/40 border border-transparent p-3 rounded-xl text-center transition-all duration-300">
+                            <div class="text-[9px] text-slate-600 font-bold mb-1">STAGE_02</div>
+                            <div id="step-text-1" class="text-xs font-bold text-slate-600 truncate">EMPTY</div>
+                        </div>
+                        <div id="step-card-2" class="bg-slate-950/40 border border-transparent p-3 rounded-xl text-center transition-all duration-300">
+                            <div class="text-[9px] text-slate-600 font-bold mb-1">STAGE_03</div>
+                            <div id="step-text-2" class="text-xs font-bold text-slate-600 truncate">EMPTY</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dashboard-controls" class="hidden mt-6 space-y-3">
+                    <button id="btn-change-pass" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-950 cursor-pointer text-white">
+                        ⚙ Overwrite Gestural Vault
                     </button>
-                    <button id="btn-lock" class="w-full py-3 bg-slate-800 hover:bg-slate-700 font-semibold text-sm text-slate-300 rounded-xl transition-all cursor-pointer">
-                        🔒 Relock System Now
+                    <button id="btn-relock" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-xs font-bold uppercase tracking-wider text-slate-300 rounded-xl transition-all cursor-pointer">
+                        🔒 Lock Console Firewall
                     </button>
                 </div>
             </div>
 
-            <div id="view-enroll" class="hidden">
-                <div class="flex items-center gap-2 mb-6">
-                    <span class="h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
-                    <span class="text-xs font-mono tracking-widest text-amber-400 uppercase font-bold">ENROLLMENT_MODE</span>
+            <div class="space-y-4 mt-6">
+                <div id="status-box" class="bg-slate-950/80 border rounded-xl p-5 space-y-3 transition-all duration-300">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500 font-bold">PIPELINE_STATUS:</span>
+                        <span id="txt-action" class="font-bold tracking-wide uppercase">ANALYZING_ENVIRONMENT</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2 border border-slate-800">
+                        <div id="progress-bar" class="h-full w-0 transition-all duration-75 ease-out shadow-[0_0_10px_currentColor]"></div>
+                    </div>
                 </div>
-                <h1 class="text-3xl font-bold tracking-tight text-white mb-2">Register New Sign</h1>
-                <p class="text-slate-400 text-sm leading-relaxed mb-8">
-                    Strike your brand-new 4-finger hand shape in front of the lens. Hold it steady to lock it into system memory.
-                </p>
-            </div>
-
-            <div id="status-box" class="bg-slate-950/60 border border-rose-950 rounded-xl p-5 font-mono text-sm space-y-3">
-                <div class="flex justify-between">
-                    <span class="text-slate-500">LIVE_ACTION:</span>
-                    <span id="txt-action" class="text-rose-400 font-bold uppercase tracking-wide">WAITING_FOR_HAND</span>
-                </div>
-                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-4">
-                    <div id="progress-bar" class="bg-rose-500 h-full w-0 transition-all duration-700 ease-out"></div>
+                <div class="text-[9px] text-slate-600 flex justify-between">
+                    <span>SECURITY: VECTOR_SPACE_MATRIX</span>
+                    <span id="txt-gesture-signature" class="font-bold text-slate-500">SIGN: NONE</span>
                 </div>
             </div>
-
         </div>
 
-        <div class="p-8 bg-slate-950 flex flex-col items-center justify-center relative">
-            <div class="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+        <div class="p-8 bg-slate-950/90 flex flex-col items-center justify-center relative border-t md:border-t-0 md:border-l border-slate-800">
+            <div class="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-slate-800"></div>
+            <div class="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-slate-800"></div>
+            <div class="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-slate-800"></div>
+            <div class="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-slate-800"></div>
+
+            <div class="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900/60 shadow-2xl flex items-center justify-center">
+                <div id="camera-loading-overlay" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-4 text-center z-50 transition-opacity duration-300">
+                    <div class="w-8 h-8 border-4 border-t-cyan-400 border-slate-800 rounded-full animate-spin mb-3"></div>
+                    <p id="loading-status" class="text-xs text-slate-400 max-w-xs leading-relaxed">Booting client camera matrix lines...</p>
+                </div>
+                
                 <video id="webcam" class="hidden" autoplay playsinline></video>
-                <canvas id="output-canvas" class="w-full h-full object-cover scale-x-[-1]"></canvas>
+                <canvas id="output-canvas" class="w-full h-full object-cover scale-x-[-1] brightness-110 contrast-105"></canvas>
+                <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-20 scanner-line"></div>
             </div>
         </div>
     </div>
